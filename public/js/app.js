@@ -776,6 +776,9 @@ const app = new Vue({
     el: '#app'
 });*/
 
+// #[Vue warn]: Cannot find element: #app 报错
+// npm run dev
+
 /***/ }),
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
