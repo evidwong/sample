@@ -9,6 +9,22 @@ use Illuminate\Support\Facades\DB;
 
 class UsersController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth',[
+            'except'=>['show','create','store','index']
+            ]);
+        $this->middleware('guest', [
+            'only' => ['create']
+        ]);
+    }
+
+    public function index()
+    {
+        $users = User::paginate(10);
+        return view('users.index', compact('users'));
+    }
+    
     public function create()
     {
         return view('users.create');
@@ -37,23 +53,39 @@ class UsersController extends Controller
     }
     public function edit(User $user)
     {
+        $this->authorize('update',$user);
         return view('users.edit', compact('user'));
     }
 
     public function update(User $user,Request $request)
     {
+        $this->authorize('update',$user);
         $this->validate($request, [
             'name' => 'required|max:50',
             'password' => 'nullable|confirmed|min:6'
         ]);
-         DB::enableQueryLog();
+        $data=[];
+        $data['name']=$request->name;
+        if ($request->password) {
+            $data['password']=bcrypt($request->password);
+        }
+
+        $user->update($data);
+
+         // DB::enableQueryLog();
         // var_dump($user);
-        $user->update([
+        /*$user->update([
             'name' => $request->name,
             'password' => bcrypt($request->password),
-        ]);
-        $sql=DB::getQueryLog();
-        var_dump($sql);
-        // return redirect()->route('users.show',$user->id)->with('success','更新成功');
+        ]);*/
+        // $sql=DB::getQueryLog();
+        // var_dump($sql);
+        return redirect()->route('users.show',$user->id)->with('success','更新成功');
+    }
+
+    public function destroy(User $user)
+    {
+        $user->delete();
+        return back()->with('success','删除用户成功');
     }
 }
