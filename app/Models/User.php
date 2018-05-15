@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use function foo\func;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -32,5 +33,20 @@ class User extends Authenticatable
     {
         $hash = md5(strtolower(trim($this->attributes['email'])));
         return "http://www.gravatar.com/avatar/$hash?s=$size";
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+
+        // 创建监听方法，用于创建用户时自动生成 activation_toke
+        static::creating(function ($user){
+            $user->activation_token=str_random(32);
+        });
+
+        // 监听方法，用户创建用户成功后执行
+        static::created(function ($user){
+            //
+        });
     }
 }

@@ -6,13 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Auth;
 use Illuminate\Support\Facades\DB;
+use Mail;
 
 class UsersController extends Controller
 {
     public function __construct()
     {
         $this->middleware('auth',[
-            'except'=>['show','create','store','index']
+            'except'=>['show','create','store','index','confirmEmail']
             ]);
         $this->middleware('guest', [
             'only' => ['create']
@@ -24,7 +25,7 @@ class UsersController extends Controller
         $users = User::paginate(10);
         return view('users.index', compact('users'));
     }
-    
+
     public function create()
     {
         return view('users.create');
@@ -47,10 +48,39 @@ class UsersController extends Controller
             'email' => $request->email,
             'password' => bcrypt($request->password),
         ]);
+        $this->sendMailConfirmationTo($user);
+        return redirect('/')->with('success','验证邮件已发送到你的注册邮箱上，请注意查收。');
+        //Auth::login($user);
+        //return redirect()->route('users.show', [$user])->with('success','欢迎，您将在这里开启一段新的旅程~');
+    }
+
+    /**
+     * 发送激活邮件
+     * @param $user 用户对象
+     */
+    public function sendMailConfirmationTo($user)
+    {
+        $view='emails.confirm';
+        $data=compact('user');
+        $from = 'aufree@yousails.com';
+        $name = 'Aufree';
+        $to = $user->email;
+        $subject = "感谢注册 Sample 应用！请确认你的邮箱。";
+        Mail::send($view, $data, function ($message) use ($from, $name, $to, $subject) {
+            $message->from($from, $name)->to($to)->subject($subject);
+        });
+    }
+    public function confirmEmail($token)
+    {
+        $user = User::where('activation_token',$token)->firstOrFail();
+        $user->activated = true;
+        $user->activation_token = null;
+        $user->save();
 
         Auth::login($user);
-        return redirect()->route('users.show', [$user])->with('success','欢迎，您将在这里开启一段新的旅程~');
+        return redirect()->route('users.show',[$user])->with('success','激活成功！');
     }
+
     public function edit(User $user)
     {
 
