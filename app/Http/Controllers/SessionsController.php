@@ -25,7 +25,7 @@ class SessionsController extends Controller
             'password' => 'required|min:6'
         ]);
         if (Auth::attempt($credentials,$request->has('remember'))) {
-           if (Auto::User()->activated){
+           if (Auth::User()->activated){
                session()->flash('success', '欢迎回来！');
                return redirect()->intended(route('users.show', [Auth::user()]));
            }else{
