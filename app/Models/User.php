@@ -49,6 +49,12 @@ class User extends Authenticatable
         return "http://www.gravatar.com/avatar/$hash?s=$size";
     }
 
+    public function link($params = [])
+    {
+        $params = array_merge([$this->id], $params);
+        return route('users.show', $params);
+    }
+
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetPassword($token));
