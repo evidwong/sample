@@ -12,9 +12,9 @@ class UsersController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth',[
-            'except'=>['show','create','store','index','confirmEmail']
-            ]);
+        $this->middleware('auth', [
+            'except' => ['show', 'create', 'store', 'index', 'confirmEmail']
+        ]);
         $this->middleware('guest', [
             'only' => ['create']
         ]);
@@ -33,9 +33,9 @@ class UsersController extends Controller
 
     public function show(User $user)
     {
-        $statuses=$user->statuses()->orderBy('created_at','desc')->paginate(10);
+        $statuses = $user->statuses()->orderBy('created_at', 'desc')->paginate(10);
 //        dd($statuses->toArray());
-        return view('users.show', compact('user','statuses'));
+        return view('users.show', compact('user', 'statuses'));
     }
 
     public function store(Request $request)
@@ -51,7 +51,7 @@ class UsersController extends Controller
             'password' => bcrypt($request->password),
         ]);
         $this->sendMailConfirmationTo($user);
-        return redirect('/')->with('success','验证邮件已发送到你的注册邮箱上，请注意查收。');
+        return redirect('/')->with('success', '验证邮件已发送到你的注册邮箱上，请注意查收。');
         //Auth::login($user);
         //return redirect()->route('users.show', [$user])->with('success','欢迎，您将在这里开启一段新的旅程~');
     }
@@ -62,8 +62,8 @@ class UsersController extends Controller
      */
     public function sendMailConfirmationTo($user)
     {
-        $view='emails.confirm';
-        $data=compact('user');
+        $view = 'emails.confirm';
+        $data = compact('user');
         $from = 'aufree@yousails.com';
         $name = 'Aufree';
         $to = $user->email;
@@ -72,27 +72,28 @@ class UsersController extends Controller
             $message->from($from, $name)->to($to)->subject($subject);
         });
     }
+
     public function confirmEmail($token)
     {
-        $user = User::where('activation_token',$token)->firstOrFail();
+        $user = User::where('activation_token', $token)->firstOrFail();
         $user->activated = true;
         $user->activation_token = null;
         $user->save();
 
         Auth::login($user);
-        return redirect()->route('users.show',[$user])->with('success','激活成功！');
+        return redirect()->route('users.show', [$user])->with('success', '激活成功！');
     }
 
     public function edit(User $user)
     {
 
-        $this->authorize('update',$user);
+        $this->authorize('update', $user);
         return view('users.edit', compact('user'));
     }
 
-    public function update(User $user,Request $request)
+    public function update(User $user, Request $request)
     {
-        $this->authorize('update',$user);
+        $this->authorize('update', $user);
         $this->validate($request, [
             'name' => 'required|max:50',
             'password' => 'nullable|confirmed|min:6'
@@ -107,15 +108,15 @@ class UsersController extends Controller
 //        var_dump($sql);
         // return redirect()->route('users.show',$user->id)->with('success','更新成功');
 
-        $data=[];
-        $data['name']=$request->name;
+        $data = [];
+        $data['name'] = $request->name;
         if ($request->password) {
-            $data['password']=bcrypt($request->password);
+            $data['password'] = bcrypt($request->password);
         }
 
         $user->update($data);
 
-         // DB::enableQueryLog();
+        // DB::enableQueryLog();
         // var_dump($user);
         /*$user->update([
             'name' => $request->name,
@@ -123,12 +124,31 @@ class UsersController extends Controller
         ]);*/
         // $sql=DB::getQueryLog();
         // var_dump($sql);
-        return redirect()->route('users.show',$user->id)->with('success','更新成功');
+        return redirect()->route('users.show', $user->id)->with('success', '更新成功');
     }
 
+    /**
+     * @param User $user
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Exception
+     */
     public function destroy(User $user)
     {
         $user->delete();
-        return back()->with('success','删除用户成功');
+        return back()->with('success', '删除用户成功');
+    }
+
+
+    public function followings(User $user)
+    {
+        $users = $user->followings()->paginate(10);
+        $title = '关注的人';
+        return view('users.show_follow', compact('users', 'title'));
+    }
+    public function followers(User $user)
+    {
+        $users=$user->follower()->paginate(10);
+        $title='粉丝';
+        return view('users.show_follow', compact('users', 'title'));
     }
 }
