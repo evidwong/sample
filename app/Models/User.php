@@ -15,15 +15,15 @@ class User extends Authenticatable
 
 //    public $timestamps = trye;
 
-    protected function getDateFormat()
+    /*protected function getDateFormat()
     {
-//        return date('Y-m-d H:i:s');
+        return date('Y-m-d H:i:s');
     }
 
     protected function asDateTime($value)
     {
-//        return $value;
-    }
+        return $value;
+    }*/
 
     /**
      * The attributes that are mass assignable.
@@ -79,13 +79,14 @@ class User extends Authenticatable
         $user_ids = Auth::user()->followings->pluck('id')->toArray();
         array_push($user_ids, Auth::user()->id);
         // with 预加载Status模型里面的 user关联数据
-        return Status::whereIn('user_id', $user_ids)->with('user')->orderBy('created_at', 'desc');
+
+        return Status::whereIn('user_id', $user_ids)->with('user')->orderBy('created_at', 'desc'); //返回查询构造器
     }
 
     /**
      * 粉丝多对多
      */
-    public function follower()
+    public function followers()
     {
         return $this->belongsToMany(User::class, 'followers', 'user_id', 'follower_id');
     }
